@@ -30,3 +30,11 @@ titles = hb.scan
 # See HandBrake::Title for some basic docs
 puts titles.first.width
 ```
+
+# TODO
+
+* Metadata
+* Chapter
+* AudioTrack
+* Subtitle
+* Attachment
