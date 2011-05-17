@@ -15,3 +15,18 @@ From there, you can use the standard rake-compiler tasks to compile the gem.
 # Using it a project
 
 For now I'd suggest just cloning this into `vendor/gems` and run the compile stuff up there ^^
+
+# Usage
+
+``` ruby
+hb = HandBrake.new
+
+# source can be anything HandBrake supports
+# could be an mp4, an mkv or a DVD or even BlueRay disk folder/iso
+source = "/path/to/source"
+
+titles = hb.scan
+
+# See HandBrake::Title for some basic docs
+puts titles.first.width
+```
