@@ -1,0 +1,5 @@
+ext/handbrake/libhandbrake.dylib
+vendor/gems
+vendor/handbrake
+tmp
+*.bundle
