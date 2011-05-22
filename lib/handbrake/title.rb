@@ -173,7 +173,7 @@ class HandBrake
     # attr_reader :video_stream_type
 
     # Fixnum - no idea
-    # attr_reader :video_codec_param
+    # attr_reader :video_codec_params
 
     # String - like "mp4"
     attr_reader :video_codec_name
