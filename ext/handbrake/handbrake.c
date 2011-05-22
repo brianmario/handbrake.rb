@@ -1,12 +1,31 @@
 #include <ruby.h>
 #include <hb.h>
 
+#if defined(__GNUC__) && (__GNUC__ >= 3)
+#define RB_HB_UNUSED __attribute__ ((unused))
+#else
+#define RB_HB_UNUSED
+#endif
+
 static VALUE rb_cHandBrake_cTitle, rb_cHandBrake_cTitle_cMetadata,
              rb_cHandBrake_cTitle_cChapter, rb_cHandBrake_cTitle_cAudioTrack,
              rb_cHandBrake_cTitle_cSubtitle, rb_cHandBrake_cTitle_cAttachment,
              rb_cHandBrake_cTitle_cLanguage;
 
-static void rb_cHandBrake__logger(const char* message) {
+/* Hack */
+struct hb_metadata_t {
+   char  name[255];
+   char  artist[255];
+   char  composer[255];
+   char  release_date[255];
+   char  comment[1024];
+   char  album[255];
+   char  genre[255];
+   uint32_t coverart_size;
+   uint8_t *coverart;
+};
+
+static void rb_cHandBrake__logger(RB_HB_UNUSED const char* message) {
   // noop
 }
 
@@ -27,12 +46,167 @@ static VALUE rb_cHandBrake__allocate(VALUE klass) {
   return Data_Wrap_Struct(klass, NULL, rb_cHandBrake__free, handle);
 }
 
+static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
+  VALUE rb_audio_track;
+  VALUE rb_language;
+
+  rb_audio_track = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cAudioTrack);
+
+  rb_iv_set(rb_audio_track, "@track", INT2FIX(audio_track->in.track));
+
+  // TODO: Find out what these all are.
+  // I bet some of these aren't actually input codecs but rather used for the encode
+  // process or something else
+  switch(audio_track->in.codec) {
+    case HB_ACODEC_FAAC:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("faac")));
+      break;
+    case HB_ACODEC_LAME:
+    rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("lame")));
+      break;
+    case HB_ACODEC_VORBIS:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("vorbis")));
+      break;
+    case HB_ACODEC_AC3:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("ac3")));
+      break;
+    case HB_ACODEC_MPGA:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("mpga")));
+      break;
+    case HB_ACODEC_LPCM:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("lpcm")));
+      break;
+    case HB_ACODEC_DCA:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("dca")));
+      break;
+    case HB_ACODEC_FFMPEG:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("ffmpeg")));
+      break;
+    case HB_ACODEC_CA_AAC:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("aac")));
+      break;
+    case HB_ACODEC_CA_HAAC:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("haac")));
+      break;
+    default:
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("unknown")));
+      break;
+  }
+
+  rb_iv_set(rb_audio_track, "@registration_descriptor", INT2FIX(audio_track->in.reg_desc));
+
+  rb_iv_set(rb_audio_track, "@stream_type", INT2FIX(audio_track->in.stream_type));
+
+  rb_iv_set(rb_audio_track, "@substream_type", INT2FIX(audio_track->in.substream_type));
+
+  rb_iv_set(rb_audio_track, "@codec_params", INT2FIX(audio_track->in.codec_param));
+
+  rb_iv_set(rb_audio_track, "@version", INT2FIX(audio_track->in.version));
+
+  rb_iv_set(rb_audio_track, "@mode", INT2FIX(audio_track->in.mode));
+
+  rb_iv_set(rb_audio_track, "@samplerate", INT2FIX(audio_track->in.samplerate));
+
+  rb_iv_set(rb_audio_track, "@bitrate", INT2FIX(audio_track->in.bitrate));
+
+  rb_iv_set(rb_audio_track, "@channel_layout", INT2FIX(audio_track->in.channel_layout));
+
+  rb_language = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cLanguage);
+
+  if (strlen(audio_track->lang.description)) {
+    rb_iv_set(rb_language, "@description", rb_str_new2(audio_track->lang.description));
+  }
+  if (strlen(audio_track->lang.simple)) {
+    rb_iv_set(rb_language, "@simple", rb_str_new2(audio_track->lang.simple));
+  }
+  if (strlen(audio_track->lang.iso639_2)) {
+    rb_iv_set(rb_language, "@iso639_2", rb_str_new2(audio_track->lang.iso639_2));
+  }
+  rb_iv_set(rb_language, "@type", INT2FIX(audio_track->lang.type));
+
+  rb_iv_set(rb_language, "@language", rb_language);
+
+  return rb_audio_track;
+}
+
+static VALUE rb_cHandBrake__new_chapter(hb_chapter_t *chapter) {
+  VALUE rb_chapter;
+
+  rb_chapter = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cChapter);
+
+  rb_iv_set(rb_chapter, "@index", INT2FIX(chapter->index));
+
+  rb_iv_set(rb_chapter, "@pgcn", INT2FIX(chapter->pgcn));
+
+  rb_iv_set(rb_chapter, "@pgn", INT2FIX(chapter->pgn));
+
+  rb_iv_set(rb_chapter, "@cell_start", INT2FIX(chapter->cell_start));
+  rb_iv_set(rb_chapter, "@cell_end", INT2FIX(chapter->cell_end));
+
+  rb_iv_set(rb_chapter, "@block_start", ULL2NUM(chapter->block_start));
+  rb_iv_set(rb_chapter, "@block_end", ULL2NUM(chapter->block_end));
+  rb_iv_set(rb_chapter, "@block_count", ULL2NUM(chapter->block_count));
+
+  rb_iv_set(rb_chapter, "@hours", INT2FIX(chapter->hours));
+  rb_iv_set(rb_chapter, "@minutes", INT2FIX(chapter->minutes));
+  rb_iv_set(rb_chapter, "@seconds", INT2FIX(chapter->seconds));
+  rb_iv_set(rb_chapter, "@duration", ULL2NUM(chapter->duration));
+
+  if (strlen(chapter->title)) {
+    rb_iv_set(rb_chapter, "@title", rb_str_new2(chapter->title));
+  }
+
+  return rb_chapter;
+}
+
+static VALUE rb_cHandBrake__new_metadata(hb_metadata_t *metadata) {
+  VALUE rb_metadata;
+
+  rb_metadata = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cMetadata);
+
+  if (strlen(metadata->name)) {
+    rb_iv_set(rb_metadata, "@name", rb_str_new2(metadata->name));
+  }
+
+  if (strlen(metadata->artist)) {
+    rb_iv_set(rb_metadata, "@artist", rb_str_new2(metadata->artist));
+  }
+
+  if (strlen(metadata->composer)) {
+    rb_iv_set(rb_metadata, "@composer", rb_str_new2(metadata->composer));
+  }
+
+  if (strlen(metadata->release_date)) {
+    rb_iv_set(rb_metadata, "@release_date", rb_str_new2(metadata->release_date));
+  }
+
+  if (strlen(metadata->comment)) {
+    rb_iv_set(rb_metadata, "@comment", rb_str_new2(metadata->comment));
+  }
+
+  if (strlen(metadata->album)) {
+    rb_iv_set(rb_metadata, "@album", rb_str_new2(metadata->album));
+  }
+
+  if (strlen(metadata->genre)) {
+    rb_iv_set(rb_metadata, "@genre", rb_str_new2(metadata->genre));
+  }
+
+  if (metadata->coverart_size) {
+    rb_iv_set(rb_metadata, "@coverart", rb_str_new((const char*)metadata->coverart, metadata->coverart_size));
+  }
+
+  return rb_metadata;
+}
+
 static VALUE rb_cHandBrake__new_title(hb_title_t *title) {
-  uint8_t num_chapters;
-  uint8_t num_audio_tracks;
-  uint8_t num_subtitles;
-  uint8_t num_attachments;
+  uint8_t i = 0;
+  uint8_t num_chapters = 0;
+  uint8_t num_audio_tracks = 0;
+  uint8_t num_subtitles = 0;
+  uint8_t num_attachments = 0;
   VALUE rb_title;
+  VALUE rb_metadata;
 
   rb_title = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle);
 
@@ -86,6 +260,35 @@ static VALUE rb_cHandBrake__new_title(hb_title_t *title) {
   rb_iv_set(rb_title, "@container_name", rb_str_new2(title->container_name));
 
   rb_iv_set(rb_title, "@data_rate", INT2FIX(title->data_rate));
+
+  rb_metadata = rb_cHandBrake__new_metadata(title->metadata);
+  rb_iv_set(rb_title, "@metadata", rb_metadata);
+
+  num_chapters = hb_list_count(title->list_chapter);
+  if (num_chapters) {
+    hb_chapter_t *chapter;
+    VALUE rb_chapters = rb_ary_new2(num_chapters);
+
+    rb_iv_set(rb_title, "@chapters", rb_chapters);
+
+    for(i=0; i < num_chapters; i++) {
+      chapter = hb_list_item(title->list_chapter, i);
+      rb_ary_push(rb_chapters, rb_cHandBrake__new_chapter(chapter));
+    }
+  }
+
+  num_audio_tracks = hb_list_count(title->list_audio);
+  if (num_audio_tracks) {
+    hb_audio_config_t *audio_track;
+    VALUE rb_audio_tracks = rb_ary_new2(num_chapters);
+
+    rb_iv_set(rb_title, "@audio_tracks", rb_audio_tracks);
+
+    for(i=0; i < num_chapters; i++) {
+      audio_track = hb_list_audio_config_item(title->list_audio, i);
+      rb_ary_push(rb_audio_tracks, rb_cHandBrake__new_audio_track(audio_track));
+    }
+  }
 
   return rb_title;
 }

@@ -14,23 +14,60 @@ class HandBrake
     end
 
     class Chapter
-      
+      attr_reader :index
+      attr_reader :pgcn
+      attr_reader :pgn
+      attr_reader :cell_start
+      attr_reader :cell_end
+      attr_reader :block_start
+      attr_reader :block_end
+      attr_reader :block_count
+      attr_reader :hours
+      attr_reader :minutes
+      attr_reader :seconds
+      attr_reader :duration
+      attr_reader :title
     end
 
     class AudioTrack
+      # Fixnum - Input track number
+      attr_reader :track
+
+      # Symbol - Input audio codec
       attr_reader :codec
-      attr_reader :regular_description
+
+      # Fixnum - registration descriptor of source
+      attr_reader :registration_descriptor
+
+      # Fixnum - stream type from source stream
       attr_reader :stream_type
+
+      # Fixnum - substream for multiplexed streams
       attr_reader :substream_type
-      attr_reader :codec_param
+
+      # Fixnum - per-codec config info
+      attr_reader :codec_params
+
+      # Fixnum - Bitsream version
       attr_reader :version
+
+      # Fixnum - Bitstream mode, codec dependent encoding
       attr_reader :mode
+
+      # Fixnum - Input sample rate (Hz)
       attr_reader :sample_rate
+
+      # Fixnum - Input bitrate (kbps)
       attr_reader :bitrate
+
+      # Fixnum - channel_layout is the channel layout of this audio this is used to
+      #          provide a common way of describing the source audio
       attr_reader :channel_layout
 
-      # will be either :ac3 or :dca
+      # Fixnum - is only set when the audio codec is :ac3 or :dca
       attr_reader :flags
+
+      # HandBrake::Title::Language - the language info for this audio track
       attr_reader :language
     end
 
