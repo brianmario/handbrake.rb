@@ -109,7 +109,41 @@ static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
 
   rb_iv_set(rb_audio_track, "@bitrate", INT2FIX(audio_track->in.bitrate));
 
-  rb_iv_set(rb_audio_track, "@channel_layout", INT2FIX(audio_track->in.channel_layout));
+  switch (audio_track->in.channel_layout) {
+    case HB_INPUT_CH_LAYOUT_MONO:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("mono")));
+      break;
+    case HB_INPUT_CH_LAYOUT_STEREO:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("stereo")));
+      break;
+    case HB_INPUT_CH_LAYOUT_DOLBY:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("dolby")));
+      break;
+    case HB_INPUT_CH_LAYOUT_3F:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("3F")));
+      break;
+    case HB_INPUT_CH_LAYOUT_2F1R:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("2F1R")));
+      break;
+    case HB_INPUT_CH_LAYOUT_3F1R:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("3F1R")));
+      break;
+    case HB_INPUT_CH_LAYOUT_2F2R:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("2F2R")));
+      break;
+    case HB_INPUT_CH_LAYOUT_3F2R:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("3F2R")));
+      break;
+    case HB_INPUT_CH_LAYOUT_4F2R:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("4F2R")));
+      break;
+    case HB_INPUT_CH_LAYOUT_3F4R:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("3F4R")));
+      break;
+    default:
+      rb_iv_set(rb_audio_track, "@channel_layout", ID2SYM(rb_intern("unknown")));
+      break;
+  }
 
   rb_language = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cLanguage);
 

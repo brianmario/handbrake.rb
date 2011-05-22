@@ -60,8 +60,9 @@ class HandBrake
       # Fixnum - Input bitrate (kbps)
       attr_reader :bitrate
 
-      # Fixnum - channel_layout is the channel layout of this audio this is used to
+      # Symbol - channel_layout is the channel layout of this audio this is used to
       #          provide a common way of describing the source audio
+      #          it'll be something like :mono, :stereo, or :3F2R
       attr_reader :channel_layout
 
       # Fixnum - is only set when the audio codec is :ac3 or :dca
