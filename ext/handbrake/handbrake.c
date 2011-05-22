@@ -158,7 +158,7 @@ static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
   }
   rb_iv_set(rb_language, "@type", INT2FIX(audio_track->lang.type));
 
-  rb_iv_set(rb_language, "@language", rb_language);
+  rb_iv_set(rb_audio_track, "@language", rb_language);
 
   return rb_audio_track;
 }
