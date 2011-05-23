@@ -73,7 +73,18 @@ class HandBrake
     end
 
     class Subtitle
-      
+      attr_reader :track
+      attr_reader :format
+      attr_reader :source
+
+      attr_reader :language
+
+      attr_reader :type
+
+      # SRT subtitle tracks only
+      attr_reader :filename
+      attr_reader :codeset
+      attr_reader :offset
     end
 
     # These are usually used for attaching embedded fonts to movies containing SSA subtitles.

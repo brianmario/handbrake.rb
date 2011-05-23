@@ -46,6 +46,42 @@ static VALUE rb_cHandBrake__allocate(VALUE klass) {
   return Data_Wrap_Struct(klass, NULL, rb_cHandBrake__free, handle);
 }
 
+static VALUE rb_cHandBrake__new_subtitle(hb_subtitle_t *subtitle) {
+  VALUE rb_subtitle;
+  VALUE rb_language;
+
+  rb_subtitle = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cSubtitle);
+
+  rb_iv_set(rb_subtitle, "@track", INT2FIX(subtitle->track));
+
+  rb_iv_set(rb_subtitle, "@format", ID2SYM(rb_intern(subtitle->format == TEXTSUB ? "text" : "bitmap")));
+
+  rb_iv_set(rb_subtitle, "@source", ID2SYM(rb_intern(hb_subsource_name(subtitle->source))));
+
+  rb_language = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cLanguage);
+  if (strlen(subtitle->lang)) {
+    rb_iv_set(rb_language, "@description", rb_str_new2(subtitle->lang));
+  }
+  if (strlen(subtitle->iso639_2)) {
+    rb_iv_set(rb_language, "@iso639_2", rb_str_new2(subtitle->iso639_2));
+  }
+  rb_iv_set(rb_subtitle, "@language", rb_language);
+
+  rb_iv_set(rb_subtitle, "@type", INT2FIX(subtitle->type));
+
+  if (strlen(subtitle->config.src_filename)) {
+    rb_iv_set(rb_subtitle, "@filename", rb_str_new2(subtitle->config.src_filename));
+  }
+
+  if (strlen(subtitle->config.src_codeset)) {
+    rb_iv_set(rb_subtitle, "@codeset", rb_str_new2(subtitle->config.src_codeset));
+  }
+
+  rb_iv_set(rb_subtitle, "@offset", INT2FIX(subtitle->config.offset));
+
+  return rb_subtitle;
+}
+
 static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
   VALUE rb_audio_track;
   VALUE rb_language;
@@ -146,7 +182,6 @@ static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
   }
 
   rb_language = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cLanguage);
-
   if (strlen(audio_track->lang.description)) {
     rb_iv_set(rb_language, "@description", rb_str_new2(audio_track->lang.description));
   }
@@ -157,7 +192,6 @@ static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
     rb_iv_set(rb_language, "@iso639_2", rb_str_new2(audio_track->lang.iso639_2));
   }
   rb_iv_set(rb_language, "@type", INT2FIX(audio_track->lang.type));
-
   rb_iv_set(rb_audio_track, "@language", rb_language);
 
   return rb_audio_track;
@@ -321,6 +355,19 @@ static VALUE rb_cHandBrake__new_title(hb_title_t *title) {
     for(i=0; i < num_chapters; i++) {
       audio_track = hb_list_audio_config_item(title->list_audio, i);
       rb_ary_push(rb_audio_tracks, rb_cHandBrake__new_audio_track(audio_track));
+    }
+  }
+
+  num_subtitles = hb_list_count(title->list_subtitle);
+  if (num_subtitles) {
+    hb_subtitle_t *subtitle;
+    VALUE rb_subtitles = rb_ary_new2(num_subtitles);
+
+    rb_iv_set(rb_title, "@subtitles", rb_subtitles);
+
+    for(i=0; i < num_subtitles; i++) {
+      subtitle = hb_list_item(title->list_subtitle, i);
+      rb_ary_push(rb_subtitles, rb_cHandBrake__new_subtitle(subtitle));
     }
   }
 
