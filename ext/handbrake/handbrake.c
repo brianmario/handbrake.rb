@@ -46,6 +46,30 @@ static VALUE rb_cHandBrake__allocate(VALUE klass) {
   return Data_Wrap_Struct(klass, NULL, rb_cHandBrake__free, handle);
 }
 
+static VALUE rb_cHandBrake__new_attachment(hb_attachment_t *attachment) {
+  VALUE rb_attachment;
+
+  rb_attachment = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cAttachment);
+
+  switch(attachment->type) {
+    case FONT_TTF_ATTACH:
+      rb_iv_set(rb_attachment, "@type", ID2SYM(rb_intern("ttf_font")));
+    default:
+      rb_iv_set(rb_attachment, "@type", ID2SYM(rb_intern("unknown")));
+      break;
+  }
+
+  if (strlen(attachment->name)) {
+    rb_iv_set(rb_attachment, "@name", rb_str_new2(attachment->name));
+  }
+
+  if (attachment->size) {
+    rb_iv_set(rb_attachment, "@data", rb_str_new(attachment->data, attachment->size));
+  }
+
+  return rb_attachment;
+}
+
 static VALUE rb_cHandBrake__new_subtitle(hb_subtitle_t *subtitle) {
   VALUE rb_subtitle;
   VALUE rb_language;
@@ -368,6 +392,19 @@ static VALUE rb_cHandBrake__new_title(hb_title_t *title) {
     for(i=0; i < num_subtitles; i++) {
       subtitle = hb_list_item(title->list_subtitle, i);
       rb_ary_push(rb_subtitles, rb_cHandBrake__new_subtitle(subtitle));
+    }
+  }
+
+  num_attachments = hb_list_count(title->list_attachment);
+  if (num_attachments) {
+    hb_attachment_t *attachment;
+    VALUE rb_attachments = rb_ary_new2(num_attachments);
+
+    rb_iv_set(rb_title, "@attachments", rb_attachments);
+
+    for(i=0; i < num_attachments; i++) {
+      attachment = hb_list_item(title->list_attachment, i);
+      rb_ary_push(rb_attachments, rb_cHandBrake__new_attachment(attachment));
     }
   }
 

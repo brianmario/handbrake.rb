@@ -89,7 +89,9 @@ class HandBrake
 
     # These are usually used for attaching embedded fonts to movies containing SSA subtitles.
     class Attachment
-      
+      attr_reader :type
+      attr_reader :name
+      attr_reader :data
     end
 
     class Language
