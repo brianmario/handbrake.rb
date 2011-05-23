@@ -404,7 +404,7 @@ static VALUE rb_cHandBrake__new_title(hb_title_t *title) {
 
     rb_iv_set(rb_title, "@audio_tracks", rb_audio_tracks);
 
-    for(i=0; i < num_chapters; i++) {
+    for(i=0; i < num_audio_tracks; i++) {
       audio_track = hb_list_audio_config_item(title->list_audio, i);
       rb_ary_push(rb_audio_tracks, rb_cHandBrake__new_audio_track(audio_track));
     }
