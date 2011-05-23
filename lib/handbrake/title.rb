@@ -105,7 +105,7 @@ class HandBrake
     attr_reader :type
 
     # Fixnum - no idea
-    attr_reader :reg_desc
+    # attr_reader :reg_desc
 
     # String - like "/path/to/some_file.mp4" or "/Volumes/SomeDVD"
     attr_reader :path
