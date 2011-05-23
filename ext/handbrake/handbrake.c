@@ -101,7 +101,7 @@ static VALUE rb_cHandBrake__new_subtitle(hb_subtitle_t *subtitle) {
     rb_iv_set(rb_subtitle, "@codeset", rb_str_new2(subtitle->config.src_codeset));
   }
 
-  rb_iv_set(rb_subtitle, "@offset", INT2FIX(subtitle->config.offset));
+  rb_iv_set(rb_subtitle, "@offset", ULL2NUM(subtitle->config.offset));
 
   return rb_subtitle;
 }
