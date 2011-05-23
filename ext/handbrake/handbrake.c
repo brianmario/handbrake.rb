@@ -119,10 +119,10 @@ static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
   // process or something else
   switch(audio_track->in.codec) {
     case HB_ACODEC_FAAC:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("faac")));
+      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("aac")));
       break;
     case HB_ACODEC_LAME:
-    rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("lame")));
+    rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("mp3")));
       break;
     case HB_ACODEC_VORBIS:
       rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("vorbis")));
