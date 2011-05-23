@@ -399,7 +399,7 @@ static VALUE rb_cHandBrake_scan(int argc, VALUE *argv, VALUE self) {
 
   // Now lets wait for the scan to complete
   while (hb_state.state != HB_STATE_SCANDONE) {
-    hb_snooze(200);
+    hb_snooze(10);
     hb_get_state(handle, &hb_state);
   }
 
