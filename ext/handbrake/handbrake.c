@@ -12,6 +12,9 @@ static VALUE rb_cHandBrake_cTitle, rb_cHandBrake_cTitle_cMetadata,
              rb_cHandBrake_cTitle_cSubtitle, rb_cHandBrake_cTitle_cAttachment,
              rb_cHandBrake_cTitle_cLanguage;
 
+static hb_handle_t *handle;
+static bool scanBusy = FALSE;
+
 /* Hack */
 struct hb_metadata_t {
    char  name[255];
@@ -27,23 +30,6 @@ struct hb_metadata_t {
 
 static void rb_cHandBrake__logger(RB_HB_UNUSED const char* message) {
   // noop
-}
-
-static void rb_cHandBrake__free(void * ptr) {
-  hb_handle_t *handle = (hb_handle_t *)ptr;
-
-  hb_close(&handle);
-}
-
-static VALUE rb_cHandBrake__allocate(VALUE klass) {
-  hb_handle_t *handle;
-
-  handle = hb_init(0, 0);
-
-  // silence logging messages
-  hb_register_logger(rb_cHandBrake__logger);
-
-  return Data_Wrap_Struct(klass, NULL, rb_cHandBrake__free, handle);
 }
 
 static VALUE rb_cHandBrake__new_attachment(hb_attachment_t *attachment) {
@@ -453,8 +439,7 @@ static VALUE rb_cHandBrake__new_title(hb_title_t *title) {
   return rb_title;
 }
 
-static VALUE rb_cHandBrake_scan(int argc, VALUE *argv, VALUE self) {
-  hb_handle_t *handle;
+static VALUE rb_cHandBrake_scan(int argc, VALUE *argv, RB_HB_UNUSED VALUE klass) {
   hb_list_t  *titles;
   hb_state_t hb_state;
   uint64_t min_title_duration = 900000LL;
@@ -463,7 +448,9 @@ static VALUE rb_cHandBrake_scan(int argc, VALUE *argv, VALUE self) {
   const char *path;
   VALUE rb_path;
 
-  Data_Get_Struct(self, hb_handle_t, handle);
+  if(scanBusy) {
+    rb_raise(rb_eRuntimeError, "You can only run one scan at a time per process, please wait until the previous scan finishes.");
+  }
 
   // TODO: support the following parameters in some way:
   //
@@ -474,13 +461,20 @@ static VALUE rb_cHandBrake_scan(int argc, VALUE *argv, VALUE self) {
   Check_Type(rb_path, T_STRING);
   path = RSTRING_PTR(rb_path);
 
+  if(!handle) {
+    handle = hb_init(0, 0);
+  }
+
   hb_scan(handle, path, 0, 10, 0, min_title_duration);
 
+  scanBusy = TRUE;
   // Now lets wait for the scan to complete
+  hb_get_state(handle, &hb_state);
   while (hb_state.state != HB_STATE_SCANDONE) {
     hb_snooze(10);
     hb_get_state(handle, &hb_state);
   }
+  scanBusy = FALSE;
 
   titles = hb_get_titles(handle);
   num_titles = hb_list_count(titles);
@@ -496,8 +490,21 @@ static VALUE rb_cHandBrake_scan(int argc, VALUE *argv, VALUE self) {
 
     return rb_titles;
   } else {
-    return Qnil;
+    return rb_ary_new();
   }
+}
+
+static VALUE rb_cHandBrake_scanning(RB_HB_UNUSED VALUE self) {
+  return scanBusy ? Qtrue : Qfalse;
+}
+
+static VALUE rb_cHandBrake_cleanup(RB_HB_UNUSED VALUE self) {
+  hb_close(&handle);
+  hb_global_close();
+
+  handle = NULL;
+
+  return Qnil;
 }
 
 void Init_handbrake() {
@@ -510,7 +517,14 @@ void Init_handbrake() {
   rb_cHandBrake_cTitle_cAttachment = rb_const_get(rb_cHandBrake_cTitle, rb_intern("Attachment"));
   rb_cHandBrake_cTitle_cLanguage = rb_const_get(rb_cHandBrake_cTitle, rb_intern("Language"));
 
-  rb_define_alloc_func(rb_cHandBrake, rb_cHandBrake__allocate);
+  rb_define_singleton_method(rb_cHandBrake, "scan", rb_cHandBrake_scan, -1);
+  rb_define_singleton_method(rb_cHandBrake, "scanning?", rb_cHandBrake_scanning, 0);
+  rb_define_singleton_method(rb_cHandBrake, "cleanup!", rb_cHandBrake_cleanup, 0);
 
-  rb_define_method(rb_cHandBrake, "scan", rb_cHandBrake_scan, -1);
+  // globally initialize libhb
+  handle = hb_init(0, 0);
+  hb_dvd_set_dvdnav(1);
+
+  // silence logging messages
+  // hb_register_logger(rb_cHandBrake__logger);
 }
