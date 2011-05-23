@@ -537,5 +537,5 @@ void Init_handbrake() {
   hb_dvd_set_dvdnav(1);
 
   // silence logging messages
-  // hb_register_logger(rb_cHandBrake__logger);
+  hb_register_logger(rb_cHandBrake__logger);
 }
