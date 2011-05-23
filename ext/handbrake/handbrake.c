@@ -45,7 +45,7 @@ static VALUE rb_cHandBrake__new_attachment(hb_attachment_t *attachment) {
       break;
   }
 
-  if (strlen(attachment->name)) {
+  if (attachment->name && strlen(attachment->name)) {
     rb_iv_set(rb_attachment, "@name", rb_str_new2(attachment->name));
   }
 
@@ -69,21 +69,21 @@ static VALUE rb_cHandBrake__new_subtitle(hb_subtitle_t *subtitle) {
   rb_iv_set(rb_subtitle, "@source", ID2SYM(rb_intern(hb_subsource_name(subtitle->source))));
 
   rb_language = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cLanguage);
-  if (strlen(subtitle->lang)) {
+  if (subtitle->lang && strlen(subtitle->lang)) {
     rb_iv_set(rb_language, "@description", rb_str_new2(subtitle->lang));
   }
-  if (strlen(subtitle->iso639_2)) {
+  if (subtitle->iso639_2 && strlen(subtitle->iso639_2)) {
     rb_iv_set(rb_language, "@iso639_2", rb_str_new2(subtitle->iso639_2));
   }
   rb_iv_set(rb_subtitle, "@language", rb_language);
 
   rb_iv_set(rb_subtitle, "@type", INT2FIX(subtitle->type));
 
-  if (strlen(subtitle->config.src_filename)) {
+  if (subtitle->config.src_filename && strlen(subtitle->config.src_filename)) {
     rb_iv_set(rb_subtitle, "@filename", rb_str_new2(subtitle->config.src_filename));
   }
 
-  if (strlen(subtitle->config.src_codeset)) {
+  if (subtitle->config.src_codeset && strlen(subtitle->config.src_codeset)) {
     rb_iv_set(rb_subtitle, "@codeset", rb_str_new2(subtitle->config.src_codeset));
   }
 
@@ -234,13 +234,13 @@ static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
   }
 
   rb_language = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cLanguage);
-  if (strlen(audio_track->lang.description)) {
+  if (audio_track->lang.description && strlen(audio_track->lang.description)) {
     rb_iv_set(rb_language, "@description", rb_str_new2(audio_track->lang.description));
   }
-  if (strlen(audio_track->lang.simple)) {
+  if (audio_track->lang.simple && strlen(audio_track->lang.simple)) {
     rb_iv_set(rb_language, "@simple", rb_str_new2(audio_track->lang.simple));
   }
-  if (strlen(audio_track->lang.iso639_2)) {
+  if (audio_track->lang.iso639_2 && strlen(audio_track->lang.iso639_2)) {
     rb_iv_set(rb_language, "@iso639_2", rb_str_new2(audio_track->lang.iso639_2));
   }
   rb_iv_set(rb_language, "@type", INT2FIX(audio_track->lang.type));
@@ -272,7 +272,7 @@ static VALUE rb_cHandBrake__new_chapter(hb_chapter_t *chapter) {
   rb_iv_set(rb_chapter, "@seconds", INT2FIX(chapter->seconds));
   rb_iv_set(rb_chapter, "@duration", ULL2NUM(chapter->duration));
 
-  if (strlen(chapter->title)) {
+  if (chapter->title && strlen(chapter->title)) {
     rb_iv_set(rb_chapter, "@title", rb_str_new2(chapter->title));
   }
 
@@ -284,31 +284,31 @@ static VALUE rb_cHandBrake__new_metadata(hb_metadata_t *metadata) {
 
   rb_metadata = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle_cMetadata);
 
-  if (strlen(metadata->name)) {
+  if (metadata->name && strlen(metadata->name)) {
     rb_iv_set(rb_metadata, "@name", rb_str_new2(metadata->name));
   }
 
-  if (strlen(metadata->artist)) {
+  if (metadata->artist && strlen(metadata->artist)) {
     rb_iv_set(rb_metadata, "@artist", rb_str_new2(metadata->artist));
   }
 
-  if (strlen(metadata->composer)) {
+  if (metadata->composer && strlen(metadata->composer)) {
     rb_iv_set(rb_metadata, "@composer", rb_str_new2(metadata->composer));
   }
 
-  if (strlen(metadata->release_date)) {
+  if (metadata->release_date && strlen(metadata->release_date)) {
     rb_iv_set(rb_metadata, "@release_date", rb_str_new2(metadata->release_date));
   }
 
-  if (strlen(metadata->comment)) {
+  if (metadata->comment && strlen(metadata->comment)) {
     rb_iv_set(rb_metadata, "@comment", rb_str_new2(metadata->comment));
   }
 
-  if (strlen(metadata->album)) {
+  if (metadata->album && strlen(metadata->album)) {
     rb_iv_set(rb_metadata, "@album", rb_str_new2(metadata->album));
   }
 
-  if (strlen(metadata->genre)) {
+  if (metadata->genre && strlen(metadata->genre)) {
     rb_iv_set(rb_metadata, "@genre", rb_str_new2(metadata->genre));
   }
 
@@ -330,8 +330,13 @@ static VALUE rb_cHandBrake__new_title(hb_title_t *title) {
 
   rb_title = rb_class_new_instance(0, NULL, rb_cHandBrake_cTitle);
 
-  rb_iv_set(rb_title, "@path", rb_str_new2(title->path));
-  rb_iv_set(rb_title, "@name", rb_str_new2(title->name));
+  if (title->path && strlen(title->path)) {
+    rb_iv_set(rb_title, "@path", rb_str_new2(title->path));
+  }
+
+  if (title->name && strlen(title->name)) {
+    rb_iv_set(rb_title, "@name", rb_str_new2(title->name));
+  }
 
   if (title->type == HB_STREAM_TYPE || title->type == HB_FF_STREAM_TYPE) {
     rb_iv_set(rb_title, "@type", ID2SYM(rb_intern("stream")));
@@ -373,16 +378,22 @@ static VALUE rb_cHandBrake__new_title(hb_title_t *title) {
 
   rb_iv_set(rb_title, "@detected_interlacing", title->detected_interlacing ? Qtrue : Qfalse);
 
-  rb_iv_set(rb_title, "@video_codec_name", rb_str_new2(title->video_codec_name));
+  if (title->video_codec_name && strlen(title->video_codec_name)) {
+    rb_iv_set(rb_title, "@video_codec_name", rb_str_new2(title->video_codec_name));
+  }
 
   rb_iv_set(rb_title, "@video_bitrate", INT2FIX(title->video_bitrate));
 
-  rb_iv_set(rb_title, "@container_name", rb_str_new2(title->container_name));
+  if (title->container_name && strlen(title->container_name)) {
+    rb_iv_set(rb_title, "@container_name", rb_str_new2(title->container_name));
+  }
 
   rb_iv_set(rb_title, "@data_rate", INT2FIX(title->data_rate));
 
-  rb_metadata = rb_cHandBrake__new_metadata(title->metadata);
-  rb_iv_set(rb_title, "@metadata", rb_metadata);
+  if (title->metadata) {
+    rb_metadata = rb_cHandBrake__new_metadata(title->metadata);
+    rb_iv_set(rb_title, "@metadata", rb_metadata);
+  }
 
   num_chapters = hb_list_count(title->list_chapter);
   if (num_chapters) {
