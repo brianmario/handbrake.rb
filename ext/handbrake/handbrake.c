@@ -119,47 +119,89 @@ static VALUE rb_cHandBrake__new_audio_track(hb_audio_config_t *audio_track) {
   // process or something else
   switch(audio_track->in.codec) {
     case HB_ACODEC_FAAC:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("aac")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("AAC"));
       break;
     case HB_ACODEC_LAME:
-    rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("mp3")));
+    rb_iv_set(rb_audio_track, "@codec", rb_str_new2("MP3"));
       break;
     case HB_ACODEC_VORBIS:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("vorbis")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("Vorbis"));
       break;
     case HB_ACODEC_AC3:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("ac3")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("AC3"));
       break;
     case HB_ACODEC_MPGA:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("mpga")));
+      // rb_iv_set(rb_audio_track, "@codec", rb_str_new2("MPGA"));
+      switch(audio_track->in.stream_type) {
+        case 0x80:
+          // LPCM audio in bluray have an stype of 0x80
+          rb_iv_set(rb_audio_track, "@codec", rb_str_new2("BD LPCM"));
+          break;
+        case 0x83:
+          // This is an interleaved TrueHD/AC-3 stream and the esid of
+          // the AC-3 is 0x76
+          if (audio_track->in.substream_type == HB_SUBSTREAM_BD_AC3) {
+            rb_iv_set(rb_audio_track, "@codec", rb_str_new2("AC3"));
+          } else {
+            rb_iv_set(rb_audio_track, "@codec", rb_str_new2("TrueHD"));
+          }
+          break;
+        case 0x85:
+          // DTS-HD HRA audio in bluray has an stype of 0x85
+          // which conflicts with ATSC Program ID
+          // To distinguish, Bluray streams have a reg_desc of HDMV
+          // This is an interleaved DTS-HD HRA/DTS stream and the 
+          // esid of the DTS is 0x71
+          if (audio_track->in.substream_type == HB_SUBSTREAM_BD_DTS) {
+            rb_iv_set(rb_audio_track, "@codec", rb_str_new2("DTS"));
+          } else {
+            rb_iv_set(rb_audio_track, "@codec", rb_str_new2("DTS-HD HRA"));
+          }
+          break;
+        case 0x84:
+          // EAC3 audio in bluray has an stype of 0x84
+          // which conflicts with SDDS
+          // To distinguish, Bluray streams have a reg_desc of HDMV
+          rb_iv_set(rb_audio_track, "@codec", rb_str_new2("E-AC3"));
+          break;
+        case 0x86:
+          // This is an interleaved DTS-HD MA/DTS stream and the 
+          // esid of the DTS is 0x71
+          if (audio_track->in.substream_type == HB_SUBSTREAM_BD_DTS) {
+            rb_iv_set(rb_audio_track, "@codec", rb_str_new2("DTS"));
+          } else {
+            rb_iv_set(rb_audio_track, "@codec", rb_str_new2("DTS-HD MA"));
+          }
+          break;
+        default:
+          rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("unknown")));
+          break;
+      }
       break;
     case HB_ACODEC_LPCM:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("lpcm")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("LPCM"));
       break;
     case HB_ACODEC_DCA:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("dca")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("DTS"));
       break;
     case HB_ACODEC_FFMPEG:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("ffmpeg")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("FFMPEG"));
       break;
     case HB_ACODEC_CA_AAC:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("aac")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("AAC"));
       break;
     case HB_ACODEC_CA_HAAC:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("haac")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("HAAC"));
       break;
     default:
-      rb_iv_set(rb_audio_track, "@codec", ID2SYM(rb_intern("unknown")));
+      rb_iv_set(rb_audio_track, "@codec", rb_str_new2("unknown"));
       break;
   }
 
-  rb_iv_set(rb_audio_track, "@registration_descriptor", INT2FIX(audio_track->in.reg_desc));
-
-  rb_iv_set(rb_audio_track, "@stream_type", INT2FIX(audio_track->in.stream_type));
-
-  rb_iv_set(rb_audio_track, "@substream_type", INT2FIX(audio_track->in.substream_type));
-
-  rb_iv_set(rb_audio_track, "@codec_params", INT2FIX(audio_track->in.codec_param));
+  // rb_iv_set(rb_audio_track, "@registration_descriptor", INT2FIX(audio_track->in.reg_desc));
+  // rb_iv_set(rb_audio_track, "@stream_type", INT2FIX(audio_track->in.stream_type));
+  // rb_iv_set(rb_audio_track, "@substream_type", INT2FIX(audio_track->in.substream_type));
+  // rb_iv_set(rb_audio_track, "@codec_params", INT2FIX(audio_track->in.codec_param));
 
   rb_iv_set(rb_audio_track, "@version", INT2FIX(audio_track->in.version));
 

@@ -37,16 +37,16 @@ class HandBrake
       attr_reader :codec
 
       # Fixnum - registration descriptor of source
-      attr_reader :registration_descriptor
+      # attr_reader :registration_descriptor
 
       # Fixnum - stream type from source stream
-      attr_reader :stream_type
+      # attr_reader :stream_type
 
       # Fixnum - substream for multiplexed streams
-      attr_reader :substream_type
+      # attr_reader :substream_type
 
       # Fixnum - per-codec config info
-      attr_reader :codec_params
+      # attr_reader :codec_params
 
       # Fixnum - Bitsream version
       attr_reader :version
